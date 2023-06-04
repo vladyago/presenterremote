@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:presenterremote/models/slide.dart';
 import 'package:presenterremote/services/presentation_service.dart';
-import 'package:http/http.dart';
-import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
