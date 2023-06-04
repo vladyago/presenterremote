@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:presenterremote/models/slide.dart';
 import 'package:presenterremote/services/presentation_service.dart';
 import 'package:http/http.dart';
 import 'dart:convert';
@@ -52,11 +53,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late final PresentationService _presentationService;
+  late Future<List<AppSlide>> futurePresentation;
 
   @override
   void initState() {
     _presentationService = PresentationService();
     super.initState();
+    futurePresentation = _presentationService
+        .getPresentation('6886C856-CEB6-4893-AED3-98139F2EACC0');
   }
 
   @override
@@ -74,12 +78,26 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: GridView.count(
-          crossAxisCount: 2,
-          childAspectRatio: 1.78,
-          children: _presentationService.getAllSlides().map<Widget>((slide) {
-            return _GridSlideItem(slide: slide);
-          }).toList(),
+        child: FutureBuilder<List<AppSlide>>(
+          future: futurePresentation,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 1.78,
+                children: snapshot.data!.map<Widget>((slide) {
+                  return _GridSlideItem(
+                    slide: slide,
+                    presentationService: _presentationService,
+                  );
+                }).toList(),
+              );
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+
+            return const CircularProgressIndicator();
+          },
         ),
       ),
     );
@@ -87,9 +105,11 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class _GridSlideItem extends StatelessWidget {
-  const _GridSlideItem({required this.slide});
+  const _GridSlideItem(
+      {required this.slide, required this.presentationService});
 
-  final Slide slide;
+  final AppSlide slide;
+  final PresentationService presentationService;
 
   @override
   Widget build(BuildContext context) {
@@ -99,10 +119,7 @@ class _GridSlideItem extends StatelessWidget {
         shape: RoundedRectangleBorder(
             side: const BorderSide(), borderRadius: BorderRadius.circular(1)),
         clipBehavior: Clip.antiAlias,
-        child: Image.network(
-          slide.thumbnailUrl,
-          fit: BoxFit.cover,
-        ),
+        child: presentationService.getSlideThumbnail(slide.index),
       ),
     );
 
