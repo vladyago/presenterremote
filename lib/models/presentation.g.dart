@@ -18,8 +18,8 @@ Presentation _$PresentationFromJson(Map<String, dynamic> json) => Presentation(
 
 Map<String, dynamic> _$PresentationToJson(Presentation instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'groups': instance.groups,
+      'id': instance.id.toJson(),
+      'groups': instance.groups.map((e) => e.toJson()).toList(),
       'has_timeline': instance.has_timeline,
       'presentation_path': instance.presentation_path,
       'destination': instance.destination,

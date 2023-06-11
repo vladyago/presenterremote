@@ -3,7 +3,7 @@ import 'package:presenterremote/models/group.dart';
 
 part 'presentation.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Presentation {
   final PresentationId id;
   final List<Group> groups;

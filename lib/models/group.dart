@@ -4,10 +4,10 @@ import 'package:presenterremote/models/slide.dart';
 
 part 'group.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class Group {
   final String name;
-  final ProColor color;
+  final ProColor? color;
   final List<Slide> slides;
 
   Group(this.name, this.color, this.slides);

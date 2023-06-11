@@ -17,9 +17,11 @@ class PresentationService {
         .get(Uri.parse('http://192.168.1.213:1025/v1/presentation/$uuid'));
 
     if (response.statusCode == 200) {
-      presentation = Presentation.fromJson(jsonDecode(response.body));
+      presentation =
+          Presentation.fromJson(jsonDecode(response.body)['presentation']);
 
       Slide slide;
+      int slideIndex = 0;
       for (var i = 0; i < presentation.groups.length; i++) {
         for (var j = 0; j < presentation.groups[i].slides.length; j++) {
           slide = presentation.groups[i].slides[j];
@@ -29,9 +31,10 @@ class PresentationService {
               notes: slide.notes,
               text: slide.text,
               label: slide.label,
-              index: j,
+              index: slideIndex,
             ),
           );
+          slideIndex++;
         }
       }
     } else {
