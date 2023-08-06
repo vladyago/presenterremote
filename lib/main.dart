@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Presenter Demo',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Presentation Screen'),
     );
   }
 }
@@ -112,6 +112,7 @@ class _GridSlideItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final Widget image = Semantics(
       label: slide.label,
+      enabled: slide.enabled,
       child: Material(
         shape: RoundedRectangleBorder(
             side: const BorderSide(), borderRadius: BorderRadius.circular(1)),
@@ -120,6 +121,22 @@ class _GridSlideItem extends StatelessWidget {
       ),
     );
 
-    return image;
+    return GestureDetector(
+      onTap: () => presentationService.triggerSlide(slide.index),
+      child: GridTile(
+        footer: Material(
+          color: Colors.transparent,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(4)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: GridTileBar(
+            backgroundColor: Colors.black45,
+            title: Text(slide.label),
+          ),
+        ),
+        child: image,
+      ),
+    );
   }
 }
