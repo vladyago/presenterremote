@@ -19,8 +19,8 @@ class MyApp extends StatelessWidget {
       ),
       home: const HomePage(),
       routes: {
-        '/connect/': (context) => const ConnectView(),
-        '/presentation/': (context) => const PresentationView(),
+        ConnectView.routeName: (context) => const ConnectView(),
+        PresentationView.routeName: (context) => const PresentationView(),
       },
     );
   }

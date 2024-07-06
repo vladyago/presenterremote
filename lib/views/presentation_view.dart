@@ -4,6 +4,8 @@ import 'package:presenterremote/services/presentation_service.dart';
 class PresentationView extends StatefulWidget {
   const PresentationView({Key? key}) : super(key: key);
 
+  static const routeName = '/presentation/';
+
   @override
   State<PresentationView> createState() => _PresentationViewState();
 }
@@ -14,10 +16,27 @@ class _PresentationViewState extends State<PresentationView> {
 
   @override
   void initState() {
-    _presentationService = PresentationService();
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    loadPresentationService();
     futurePresentation = _presentationService
         .getPresentation('6886C856-CEB6-4893-AED3-98139F2EACC0');
+  }
+
+  void loadPresentationService() {
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+    String ipaddress = args['ipaddress'] as String;
+    String port = args['port'] as String;
+    // String ipaddress = (_preferences.getString('ipaddress') ?? '');
+    // String port = (_preferences.getString('port') ?? '');
+    String baseUrl = 'http://$ipaddress:$port';
+    _presentationService = PresentationService(baseUrl);
   }
 
   @override
@@ -30,8 +49,6 @@ class _PresentationViewState extends State<PresentationView> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: const Text('Presentation Screen'),
       ),
       body: Center(
@@ -75,7 +92,8 @@ class _GridSlideItem extends StatelessWidget {
       enabled: slide.enabled,
       child: Material(
         shape: RoundedRectangleBorder(
-            side: const BorderSide(), borderRadius: BorderRadius.circular(1)),
+            side: const BorderSide(color: Colors.amber, width: 4.0),
+            borderRadius: BorderRadius.circular(1)),
         clipBehavior: Clip.antiAlias,
         child: presentationService.getSlideThumbnail(slide.index),
       ),
