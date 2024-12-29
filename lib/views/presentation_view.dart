@@ -13,6 +13,7 @@ class PresentationView extends StatefulWidget {
 class _PresentationViewState extends State<PresentationView> {
   late final PresentationService _presentationService;
   late Future<List<AppSlide>> futurePresentation;
+  late final String baseUrl;
 
   @override
   void initState() {
@@ -33,20 +34,12 @@ class _PresentationViewState extends State<PresentationView> {
         ModalRoute.of(context)!.settings.arguments as Map<String, String>;
     String ipaddress = args['ipaddress'] as String;
     String port = args['port'] as String;
-    // String ipaddress = (_preferences.getString('ipaddress') ?? '');
-    // String port = (_preferences.getString('port') ?? '');
-    String baseUrl = 'http://$ipaddress:$port';
+    baseUrl = '$ipaddress:$port';
     _presentationService = PresentationService(baseUrl);
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         title: const Text('Presentation Screen'),
@@ -57,8 +50,11 @@ class _PresentationViewState extends State<PresentationView> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               return GridView.count(
+                padding: const EdgeInsets.all(10),
                 crossAxisCount: 2,
                 childAspectRatio: 1.78,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
                 children: snapshot.data!.map<Widget>((slide) {
                   return _GridSlideItem(
                     slide: slide,
@@ -74,6 +70,7 @@ class _PresentationViewState extends State<PresentationView> {
           },
         ),
       ),
+      backgroundColor: Colors.black,
     );
   }
 }
@@ -90,12 +87,36 @@ class _GridSlideItem extends StatelessWidget {
     final Widget image = Semantics(
       label: slide.label,
       enabled: slide.enabled,
-      child: Material(
-        shape: RoundedRectangleBorder(
-            side: const BorderSide(color: Colors.amber, width: 4.0),
-            borderRadius: BorderRadius.circular(1)),
-        clipBehavior: Clip.antiAlias,
-        child: presentationService.getSlideThumbnail(slide.index),
+      child: FutureBuilder<Stream<Map<String, dynamic>>?>(
+        future: presentationService.getSlideIndexStream(),
+        builder: (context, streamSnapshot) {
+          if (streamSnapshot.hasData) {
+            return StreamBuilder<Map<String, dynamic>>(
+              stream: streamSnapshot.data,
+              builder: (context, snapshot) {
+                return Material(
+                  shape: RoundedRectangleBorder(
+                      side: BorderSide(
+                        color: snapshot.hasData &&
+                                snapshot.data!['presentation_index'] != null &&
+                                snapshot.data!['presentation_index']['index'] ==
+                                    slide.index
+                            ? Colors.orange
+                            : Colors.black,
+                        width: 6.0,
+                      ),
+                      borderRadius: BorderRadius.circular(1)),
+                  clipBehavior: Clip.antiAlias,
+                  child: presentationService.getSlideThumbnail(slide.index),
+                );
+              },
+            );
+          }
+          if (streamSnapshot.hasError) {
+            return const Text('Error loading stream of slide index');
+          }
+          return const CircularProgressIndicator();
+        },
       ),
     );
 

@@ -8,7 +8,6 @@ import 'package:presenterremote/models/presentation.dart';
 // import 'package:propresenter_api/propresenter_api.dart';
 
 class PresentationService {
-  //List<Slide> _slides = [];
   String _uuid = '';
   final String _baseUrl;
   // var api = ProApiClient(
@@ -25,8 +24,7 @@ class PresentationService {
     final Presentation presentation;
     _uuid = uuid;
 
-    final response =
-        await http.get(Uri.parse('$_baseUrl/v1/presentation/$uuid'));
+    final response = await http.get(_makeUri('/v1/presentation/$uuid'));
 
     if (response.statusCode == 200) {
       presentation =
@@ -62,13 +60,16 @@ class PresentationService {
 
   Image getSlideThumbnail(int index) {
     return Image.network(
-      '$_baseUrl/v1/presentation/$_uuid/thumbnail/$index?quality=400&thumbnail_type=jpeg',
+      _makeUri(
+        '/v1/presentation/$_uuid/thumbnail/$index',
+        params: {'quality': '400', 'thumbnail_type': 'jpeg'},
+      ).toString(),
       fit: BoxFit.cover,
     );
   }
 
   Future<Stream<Map<String, dynamic>>?> getSlideIndexStream() async {
-    String url = '/v1/presentation/slideIndex';
+    String url = '/v1/presentation/slide_index';
 
     // return api.callStream(
     //     'get', url);
@@ -76,8 +77,8 @@ class PresentationService {
   }
 
   void triggerSlide(int index) async {
-    final response = await http
-        .get(Uri.parse('$_baseUrl/v1/presentation/$_uuid/$index/trigger'));
+    final response =
+        await http.get(_makeUri('/v1/presentation/$_uuid/$index/trigger'));
 
     if (response.statusCode != 204) {
       throw Exception('Failed to trigger slide');
@@ -89,9 +90,9 @@ class PresentationService {
     var uri = _makeUri(path, params: params);
 
     // setup a manual request to manage streaming
-    var client = http.Client();
+    final client = http.Client();
     var verb = data == null ? 'GET' : 'POST';
-    var r = http.Request(verb, uri);
+    final r = http.Request(verb, uri);
     r.headers['content-type'] = 'application/json';
     if (data is String) {
       r.body = data;
@@ -99,59 +100,68 @@ class PresentationService {
       r.body = json.encode(data);
     }
 
-    var res = await client.send(r);
+    final res = await client.send(r); //client.send(r);
 
     // if successful, create a stream of Json Objects
-    if (res.statusCode > 199 && res.statusCode < 300) {
-      /// propresenter might close this connection prematurely.
-      /// we want to catch it.
-      try {
-        var sc = StreamController<Map<String, dynamic>>();
-        var accum = '';
-        var bodyListener = res.stream.listen((e) {
-          accum += utf8.decode(e);
-          var chunks = accum.split('\r\n\r\n');
-          // if the received data ended with \r\n\r\n, the last chunk will be empty
-          // if it didn't end with \r\n\r\n, then we want to leave it in the accumulator
-          accum = chunks.removeLast();
-          for (var chunk in chunks) {
-            try {
-              var decoded = json.decode(chunk);
-              // print(decoded);
-              sc.add({...decoded});
-            } catch (e) {
-              // print('JSON ERROR: $e');
-            }
+    // if (res.statusCode > 199 && res.statusCode < 300) {
+    /// propresenter might close this connection prematurely.
+    /// we want to catch it.
+    try {
+      var sc = StreamController<Map<String, dynamic>>();
+      var accum = '';
+      StreamSubscription<String> bodyListener;
+      bodyListener = res.stream
+          .transform(utf8.decoder)
+          // .transform(const LineSplitter())
+          .listen((String e) {
+        accum += e;
+        var chunks = accum.split('\r\n\r\n');
+        // if the received data ended with \r\n\r\n, the last chunk will be empty
+        // if it didn't end with \r\n\r\n, then we want to leave it in the accumulator
+        accum = chunks.removeLast();
+        for (var chunk in chunks) {
+          try {
+            var decoded = json.decode(chunk);
+            // print(decoded);
+            sc.add({...decoded});
+          } catch (e) {
+            // print('JSON ERROR: $e');
           }
-        });
+        }
+      }, onError: (error) {
+        // print('Stream error: $error');
+      }, onDone: () {
+        // print('Stream done');
+        // client.close();
+      });
 
-        // cleanup stream when the server has stopped sending data
-        bodyListener.onDone(() {
-          sc.isClosed ? null : sc.close();
-        });
+      // cleanup stream when the server has stopped sending data
+      bodyListener.onDone(() {
+        sc.isClosed ? null : sc.close();
+      });
 
-        // close http connection when the listener to the stream cancels
-        sc.onCancel = () {
-          bodyListener.cancel();
-          client.close();
-        };
-        return sc.stream;
-      } on http.ClientException catch (e) {
-        debug(e);
-        return null;
-      }
-    } else {
-      // we had an error of some kind, but we used a streaming request
-      // so we wait until all the response data has arrived before throwing
-      // the error.
-      var err = await _awaitBody(res.stream).timeout(const Duration(seconds: 2),
-          onTimeout: () => '"stream timeout"');
-      if (err != 'stream timeout' &&
-          res.headers['content-type'] == 'application/json') {
-        throw http.ClientException(json.decode(err));
-      }
-      throw http.ClientException(err);
+      // close http connection when the listener to the stream cancels
+      sc.onCancel = () {
+        bodyListener.cancel();
+        client.close();
+      };
+      return sc.stream;
+    } on http.ClientException catch (e) {
+      debug(e);
+      return null;
     }
+    // } else {
+    //   // we had an error of some kind, but we used a streaming request
+    //   // so we wait until all the response data has arrived before throwing
+    //   // the error.
+    //   var err = await _awaitBody(res.stream).timeout(const Duration(seconds: 2),
+    //       onTimeout: () => '"stream timeout"');
+    //   if (err != 'stream timeout' &&
+    //       res.headers['content-type'] == 'application/json') {
+    //     throw http.ClientException(json.decode(err));
+    //   }
+    //   throw http.ClientException(err);
+    // }
     // return null;
   }
 
