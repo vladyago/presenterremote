@@ -34,10 +34,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  bloc: ^8.1.4
-  flutter_bloc: ^8.1.5
+  bloc: ^9.0.0
+  flutter_bloc: ^9.0.0
   http: ^0.13.5
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
   shared_preferences: ^2.2.1
   propresenter_api: ^0.3.0
 
@@ -50,7 +50,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^4.0.0
 
   build_runner: ^2.3.3
   json_serializable: ^6.6.0

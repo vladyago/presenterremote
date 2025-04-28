@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:presenterremote/views/presentation_view.dart';
+import 'package:presenterremote/constants/routes.dart';
 
 class ConnectView extends StatefulWidget {
   const ConnectView({super.key});
-
-  static const routeName = '/connect/';
 
   @override
   State<ConnectView> createState() => _ConnectViewState();
@@ -63,7 +61,9 @@ class _ConnectViewState extends State<ConnectView> {
                     .get(Uri.parse('http://$ipaddress:$port/version'));
                 if (response.statusCode == 200) {
                   // go to presentation
-                  goToPresentationScreen(ipaddress, port);
+                  // goToPresentationScreen(ipaddress, port);
+                  // go to choose a playlists & presentation
+                  goToPlaylistView(ipaddress, port);
                 } else {
                   throw Exception(response.statusCode);
                 }
@@ -78,7 +78,18 @@ class _ConnectViewState extends State<ConnectView> {
 
   void goToPresentationScreen(String ipAddress, String port) {
     Navigator.of(context).pushNamedAndRemoveUntil(
-      PresentationView.routeName,
+      presentationViewRoute,
+      (route) => false,
+      arguments: {
+        'ipaddress': ipAddress,
+        'port': port,
+      },
+    );
+  }
+
+  void goToPlaylistView(String ipAddress, String port) {
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      playlistsViewRoute,
       (route) => false,
       arguments: {
         'ipaddress': ipAddress,

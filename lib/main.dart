@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:presenterremote/constants/routes.dart';
 import 'package:presenterremote/views/connect_view.dart';
+import 'package:presenterremote/views/playlist_items_view.dart';
+import 'package:presenterremote/views/playlists_view.dart';
 import 'package:presenterremote/views/presentation_view.dart';
 
 void main() {
@@ -7,7 +10,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -16,11 +19,16 @@ class MyApp extends StatelessWidget {
       title: 'Presenter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.teal,
+        ),
       ),
       home: const HomePage(),
       routes: {
-        ConnectView.routeName: (context) => const ConnectView(),
-        PresentationView.routeName: (context) => const PresentationView(),
+        connectViewRoute: (context) => const ConnectView(),
+        presentationViewRoute: (context) => const PresentationView(),
+        playlistsViewRoute: (context) => const PlaylistsView(),
+        playlistItemsViewRoute: (context) => const PlaylistItemsView(),
       },
     );
   }

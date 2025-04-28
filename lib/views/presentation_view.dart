@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:presenterremote/services/presentation_service.dart';
 
 class PresentationView extends StatefulWidget {
-  const PresentationView({Key? key}) : super(key: key);
-
-  static const routeName = '/presentation/';
+  const PresentationView({super.key});
 
   @override
   State<PresentationView> createState() => _PresentationViewState();
@@ -24,19 +22,22 @@ class _PresentationViewState extends State<PresentationView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    loadPresentationService();
-    futurePresentation = _presentationService
-        .getPresentation('6886C856-CEB6-4893-AED3-98139F2EACC0');
-  }
-
-  void loadPresentationService() {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, String>;
-    String ipaddress = args['ipaddress'] as String;
-    String port = args['port'] as String;
-    baseUrl = '$ipaddress:$port';
-    _presentationService = PresentationService(baseUrl);
+    _presentationService = args['presentService'] as PresentationService;
+    String presentationId = args['itemId'] as String;
+    // loadPresentationService();
+    futurePresentation = _presentationService.getPresentation(presentationId);
   }
+
+  // void loadPresentationService() {
+  //   final args =
+  //       ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+  //   String ipaddress = args['ipaddress'] as String;
+  //   String port = args['port'] as String;
+  //   baseUrl = '$ipaddress:$port';
+  //   _presentationService = PresentationService(baseUrl);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +114,7 @@ class _GridSlideItem extends StatelessWidget {
             );
           }
           if (streamSnapshot.hasError) {
-            return const Text('Error loading stream of slide index');
+            return const Text('Error loading slide index');
           }
           return const CircularProgressIndicator();
         },

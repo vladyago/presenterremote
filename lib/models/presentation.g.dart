@@ -29,7 +29,7 @@ PresentationId _$PresentationIdFromJson(Map<String, dynamic> json) =>
     PresentationId(
       json['uuid'] as String,
       json['name'] as String,
-      json['index'] as int,
+      (json['index'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PresentationIdToJson(PresentationId instance) =>
