@@ -19,23 +19,18 @@ class PlaylistsListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 50,
-            child: ListTile(
-              onTap: () {
-                onGoBack();
-              },
-              title: const Text("Go Back"),
-            ),
-          ),
-        ),
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final node = playlists[index];
             return ListTile(
               onTap: () => onTap(node),
               title: Text(node.id.name),
+              // shape: LinearBorder.bottom(
+              //   side: const BorderSide(
+              //     color: Colors.grey,
+              //     width: 1,
+              //   ),
+              // ),
             );
           }, childCount: playlists.length),
         ),

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:flutter/material.dart';
 
 part 'color.g.dart';
 
@@ -14,4 +15,13 @@ class ProColor {
   factory ProColor.fromJson(Map<String, dynamic> json) =>
       _$ProColorFromJson(json);
   Map<String, dynamic> toJson() => _$ProColorToJson(this);
+
+  Color toColor() {
+    return Color.fromRGBO(
+      (red * 255).round(),
+      (green * 255).round(),
+      (blue * 255).round(),
+      alpha,
+    );
+  }
 }

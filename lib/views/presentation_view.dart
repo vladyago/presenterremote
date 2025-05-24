@@ -11,7 +11,6 @@ class PresentationView extends StatefulWidget {
 class _PresentationViewState extends State<PresentationView> {
   late final PresentationService _presentationService;
   late Future<List<AppSlide>> futurePresentation;
-  late final String baseUrl;
 
   @override
   void initState() {
@@ -23,21 +22,11 @@ class _PresentationViewState extends State<PresentationView> {
     super.didChangeDependencies();
 
     final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
     _presentationService = args['presentService'] as PresentationService;
     String presentationId = args['itemId'] as String;
-    // loadPresentationService();
     futurePresentation = _presentationService.getPresentation(presentationId);
   }
-
-  // void loadPresentationService() {
-  //   final args =
-  //       ModalRoute.of(context)!.settings.arguments as Map<String, String>;
-  //   String ipaddress = args['ipaddress'] as String;
-  //   String port = args['port'] as String;
-  //   baseUrl = '$ipaddress:$port';
-  //   _presentationService = PresentationService(baseUrl);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +53,15 @@ class _PresentationViewState extends State<PresentationView> {
                 }).toList(),
               );
             } else if (snapshot.hasError) {
-              return Text('${snapshot.error}');
+              return Text(
+                '${snapshot.error}',
+                style: const TextStyle(color: Colors.white),
+              );
             }
 
-            return const CircularProgressIndicator();
+            return const CircularProgressIndicator(
+              color: Colors.white,
+            );
           },
         ),
       ),

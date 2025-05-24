@@ -13,8 +13,8 @@ class PlaylistsView extends StatefulWidget {
 }
 
 class _PlaylistsViewState extends State<PlaylistsView> {
-  late final PresentationService _presentationService;
-  late final String baseUrl;
+  late PresentationService _presentationService;
+  late String baseUrl;
   late Future<List<PlaylistTreeNode>> futurePlaylists;
   late List<PlaylistTreeNode> currList = List.empty(growable: true);
   late List<PlaylistTreeNode> parentList = List.empty(growable: true);
@@ -40,6 +40,38 @@ class _PlaylistsViewState extends State<PlaylistsView> {
     _presentationService = PresentationService(baseUrl);
   }
 
+  void onPlaylistTap(PlaylistTreeNode thisNode) {
+    if (thisNode.fieldType == groupType) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(thisNode.id.name),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(18.0),
+                child: PlaylistsListView(
+                  playlists: thisNode.children,
+                  onTap: (node) => onPlaylistTap(node),
+                  onGoBack: () {},
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } else {
+      Navigator.of(context).pushNamed(
+        playlistItemsViewRoute,
+        arguments: {
+          'presentService': _presentationService,
+          'playlistId': thisNode.id,
+        },
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,26 +88,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
               if (currList.isEmpty) currList = rootList;
               return PlaylistsListView(
                 playlists: currList,
-                onTap: (node) {
-                  if (node.fieldType == groupType) {
-                    setState(() {
-                      parentList = currList;
-                      currList = node.children;
-                    });
-                  } else {
-                    Navigator.of(context).pushNamed(
-                      playlistItemsViewRoute,
-                      arguments: {
-                        'presentService': _presentationService,
-                        'playlistId': node.id,
-                      },
-                    );
-                  }
-                },
+                onTap: (node) => onPlaylistTap(node),
                 onGoBack: () {
-                  setState(() {
-                    currList = parentList;
-                  });
+                  // setState(() {
+                  //   currList = parentList;
+                  // });
                 },
               );
             } else if (snapshot.hasError) {
