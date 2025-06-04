@@ -10,6 +10,7 @@ class PresentationView extends StatefulWidget {
 
 class _PresentationViewState extends State<PresentationView> {
   late final PresentationService _presentationService;
+  late final String presentationId;
   late Future<List<AppSlide>> futurePresentation;
 
   @override
@@ -24,22 +25,22 @@ class _PresentationViewState extends State<PresentationView> {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
     _presentationService = args['presentService'] as PresentationService;
-    String presentationId = args['itemId'] as String;
+    presentationId = args['itemId'] as String;
     futurePresentation = _presentationService.getPresentation(presentationId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Presentation Screen'),
-      ),
-      body: Center(
-        child: FutureBuilder<List<AppSlide>>(
-          future: futurePresentation,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return GridView.count(
+    return FutureBuilder<List<AppSlide>>(
+      future: futurePresentation,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(_presentationService.getPresentationName()),
+            ),
+            body: Center(
+              child: GridView.count(
                 padding: const EdgeInsets.all(10),
                 crossAxisCount: 2,
                 childAspectRatio: 1.78,
@@ -49,33 +50,49 @@ class _PresentationViewState extends State<PresentationView> {
                   return _GridSlideItem(
                     slide: slide,
                     presentationService: _presentationService,
+                    presentationId: presentationId,
                   );
                 }).toList(),
-              );
-            } else if (snapshot.hasError) {
-              return Text(
+              ),
+            ),
+            backgroundColor: Colors.black,
+          );
+        } else if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Presentation Screen'),
+            ),
+            body: Center(
+              child: Text(
                 '${snapshot.error}',
-                style: const TextStyle(color: Colors.white),
-              );
-            }
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          );
+        }
 
-            return const CircularProgressIndicator(
-              color: Colors.white,
-            );
-          },
-        ),
-      ),
-      backgroundColor: Colors.black,
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Presentation Screen'),
+          ),
+          body: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
     );
   }
 }
 
 class _GridSlideItem extends StatelessWidget {
   const _GridSlideItem(
-      {required this.slide, required this.presentationService});
+      {required this.slide,
+      required this.presentationService,
+      required this.presentationId});
 
   final AppSlide slide;
   final PresentationService presentationService;
+  final String presentationId;
 
   @override
   Widget build(BuildContext context) {
@@ -94,6 +111,9 @@ class _GridSlideItem extends StatelessWidget {
                       side: BorderSide(
                         color: snapshot.hasData &&
                                 snapshot.data!['presentation_index'] != null &&
+                                snapshot.data!['presentation_index']
+                                        ['presentation_id']['uuid'] ==
+                                    presentationId &&
                                 snapshot.data!['presentation_index']['index'] ==
                                     slide.index
                             ? Colors.orange
@@ -125,7 +145,7 @@ class _GridSlideItem extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: GridTileBar(
-            backgroundColor: Colors.black45,
+            backgroundColor: slide.groupColor.toColor(),
             title: Text(slide.label),
           ),
         ),
