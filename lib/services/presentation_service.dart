@@ -115,6 +115,30 @@ class PresentationService {
     }
   }
 
+  void clearSlideLayer() async {
+    final response = await http.get(_makeUri('/v1/clear/layer/slide'));
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to clear slide layer');
+    }
+  }
+
+  void clearMediaLayer() async {
+    final response = await http.get(_makeUri('/v1/clear/layer/media'));
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to clear media layer');
+    }
+  }
+
+  void clearAll() async {
+    final response = await http.get(_makeUri('/v1/clear/group/0/trigger'));
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to clear all layers');
+    }
+  }
+
   Future call(String verb, String path,
       {Map<String, dynamic>? params, Object? data, String? httpAccept}) async {
     httpAccept ??= 'application/json';
@@ -189,29 +213,26 @@ class PresentationService {
             for (var chunk in chunks) {
               try {
                 var decoded = json.decode(chunk);
-                print(decoded);
                 sc.add({...decoded});
-              } catch (e) {
-                print('JSON ERROR: $e');
+              } on http.ClientException catch (e) {
+                debug(e);
               }
             }
           },
           onError: (error) {
-            print('Stream error: $error');
+            debug(error);
           },
         );
 
         // cleanup stream when the server has stopped sending data
         bodyListener.onDone(() {
           sc.isClosed ? null : sc.close();
-          print('Stream done');
         });
 
         // close http connection when the listener to the stream cancels
         sc.onCancel = () {
           bodyListener.cancel();
           client.close();
-          print('Stream cancelled');
         };
         return sc.stream;
       } on http.ClientException catch (e) {

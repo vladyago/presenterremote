@@ -38,6 +38,33 @@ class _PresentationViewState extends State<PresentationView> {
           return Scaffold(
             appBar: AppBar(
               title: Text(_presentationService.getPresentationName()),
+              actions: [
+                PopupMenuButton(
+                  icon: const Icon(Icons.layers_clear),
+                  itemBuilder: (context) {
+                    return [
+                      PopupMenuItem(
+                        child: const Text('Clear Slide'),
+                        onTap: () {
+                          _presentationService.clearSlideLayer();
+                        },
+                      ),
+                      PopupMenuItem(
+                        child: const Text('Clear Media'),
+                        onTap: () {
+                          _presentationService.clearMediaLayer();
+                        },
+                      ),
+                      PopupMenuItem(
+                        child: const Text('Clear All'),
+                        onTap: () {
+                          _presentationService.clearAll();
+                        },
+                      ),
+                    ];
+                  },
+                )
+              ],
             ),
             body: Center(
               child: GridView.count(
@@ -141,12 +168,15 @@ class _GridSlideItem extends StatelessWidget {
         footer: Material(
           color: Colors.transparent,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(4)),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(1)),
           ),
           clipBehavior: Clip.antiAlias,
-          child: GridTileBar(
-            backgroundColor: slide.groupColor.toColor(),
-            title: Text(slide.label),
+          child: SizedBox(
+            height: 32,
+            child: GridTileBar(
+              backgroundColor: slide.groupColor.toColor().withOpacity(0.7),
+              title: Text(slide.label),
+            ),
           ),
         ),
         child: image,

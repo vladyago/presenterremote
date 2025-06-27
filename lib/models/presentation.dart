@@ -3,15 +3,15 @@ import 'package:presenterremote/models/group.dart';
 
 part 'presentation.g.dart';
 
-@JsonSerializable(explicitToJson: true)
+@JsonSerializable(explicitToJson: true, fieldRename: FieldRename.snake)
 class Presentation {
   final PresentationId id;
   final List<Group> groups;
-  final bool has_timeline;
-  final String presentation_path;
+  final bool hasTimeline;
+  final String presentationPath;
   final String destination;
 
-  Presentation(this.id, this.groups, this.has_timeline, this.presentation_path,
+  Presentation(this.id, this.groups, this.hasTimeline, this.presentationPath,
       this.destination);
 
   factory Presentation.fromJson(Map<String, dynamic> json) =>
