@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -139,6 +140,11 @@ class PresentationService {
     }
   }
 
+  Future<Stream<Map<String, dynamic>>?> getStatusUpdates(List postBody) async {
+    String url = '/v1/status/updates';
+    return callStream('get', url, data: postBody);
+  }
+
   Future call(String verb, String path,
       {Map<String, dynamic>? params, Object? data, String? httpAccept}) async {
     httpAccept ??= 'application/json';
@@ -214,6 +220,7 @@ class PresentationService {
               try {
                 var decoded = json.decode(chunk);
                 sc.add({...decoded});
+                // dev.log('decoded: $decoded', name: 'PresentationService');
               } on http.ClientException catch (e) {
                 debug(e);
               }
@@ -243,13 +250,20 @@ class PresentationService {
       // we had an error of some kind, but we used a streaming request
       // so we wait until all the response data has arrived before throwing
       // the error.
-      var err = await _awaitBody(res.stream).timeout(const Duration(seconds: 2),
+      var err = await _awaitBody(res.stream).timeout(
+          const Duration(seconds: 10),
           onTimeout: () => '"stream timeout"');
+
       if (err != 'stream timeout' &&
           res.headers['content-type'] == 'application/json') {
-        throw http.ClientException(json.decode(err));
+        var decoded = json.decode(err);
+        if (decoded is List) {
+          throw http.ClientException(
+              '${res.statusCode}: ${decoded.join('; ')}');
+        }
+        throw http.ClientException('${res.statusCode}: $decoded');
       }
-      throw http.ClientException(err);
+      throw http.ClientException('${res.statusCode}: $err');
     }
   }
 
@@ -257,13 +271,14 @@ class PresentationService {
     var accum = <int>[];
     var completer = Completer<String>();
     s.listen((bytes) => accum.addAll(bytes)).onDone(() {
-      completer.complete(utf8.decode(accum));
+      completer.complete(utf8.decode(accum, allowMalformed: false));
     });
     return completer.future;
   }
 
   void debug(http.ClientException e) {
     // Maybe implement
+    dev.log("Error: ${e.message}", name: 'PresentationService', error: e);
   }
 }
 

@@ -12,9 +12,10 @@ class PlaylistItemsView extends StatefulWidget {
 }
 
 class _PlaylistItemsViewState extends State<PlaylistItemsView> {
-  late PresentationService _presentationService;
-  late PlaylistId _playlistId;
-  late Future<Playlist> futurePlaylist;
+  late final PresentationService _presentationService;
+  late final PlaylistId _playlistId;
+  late final Future<Playlist> futurePlaylist;
+  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -24,11 +25,14 @@ class _PlaylistItemsViewState extends State<PlaylistItemsView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    _presentationService = args['presentService'] as PresentationService;
-    _playlistId = args['playlistId'] as PlaylistId;
-    futurePlaylist = _presentationService.getPlaylist(_playlistId.uuid);
+    if (!_isInitialized) {
+      final args =
+          ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      _presentationService = args['presentService'] as PresentationService;
+      _playlistId = args['playlistId'] as PlaylistId;
+      futurePlaylist = _presentationService.getPlaylist(_playlistId.uuid);
+      _isInitialized = true;
+    }
   }
 
   @override
@@ -61,7 +65,7 @@ class _PlaylistItemsViewState extends State<PlaylistItemsView> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      tileColor: item.headerColor?.toColor().withOpacity(0.1),
+                      tileColor: item.headerColor?.toColor().withOpacity(0.5),
                     );
                   } else {
                     return ListTile(

@@ -13,11 +13,12 @@ class PlaylistsView extends StatefulWidget {
 }
 
 class _PlaylistsViewState extends State<PlaylistsView> {
-  late PresentationService _presentationService;
-  late String baseUrl;
-  late Future<List<PlaylistTreeNode>> futurePlaylists;
+  late final PresentationService _presentationService;
+  late final String baseUrl;
+  late final Future<List<PlaylistTreeNode>> futurePlaylists;
   late List<PlaylistTreeNode> currList = List.empty(growable: true);
   late List<PlaylistTreeNode> parentList = List.empty(growable: true);
+  bool _isInitialized = false;
 
   @override
   void initState() {
@@ -27,8 +28,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    loadPresentationService();
-    futurePlaylists = _presentationService.getAllPlaylists();
+    if (!_isInitialized) {
+      loadPresentationService();
+      futurePlaylists = _presentationService.getAllPlaylists();
+      _isInitialized = true;
+    }
   }
 
   void loadPresentationService() {
@@ -50,7 +54,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                 title: Text(thisNode.id.name),
               ),
               body: Padding(
-                padding: const EdgeInsets.all(18.0),
+                padding: const EdgeInsets.all(8.0),
                 child: PlaylistsListView(
                   playlists: thisNode.children,
                   onTap: (node) => onPlaylistTap(node),
@@ -79,7 +83,7 @@ class _PlaylistsViewState extends State<PlaylistsView> {
         title: const Text('Playlists'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.all(8.0),
         child: FutureBuilder<List<PlaylistTreeNode>>(
           future: futurePlaylists,
           builder: (context, snapshot) {

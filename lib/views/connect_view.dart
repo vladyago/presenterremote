@@ -60,8 +60,6 @@ class _ConnectViewState extends State<ConnectView> {
                 final response = await http
                     .get(Uri.parse('http://$ipaddress:$port/version'));
                 if (response.statusCode == 200) {
-                  // go to presentation
-                  // goToPresentationScreen(ipaddress, port);
                   // go to choose a playlists & presentation
                   goToPlaylistView(ipaddress, port);
                 } else {

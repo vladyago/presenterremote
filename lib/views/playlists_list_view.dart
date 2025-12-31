@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:presenterremote/constants/types.dart';
 import 'package:presenterremote/models/playlist.dart';
 
 typedef NodeCallback = void Function(PlaylistTreeNode node);
@@ -25,12 +26,9 @@ class PlaylistsListView extends StatelessWidget {
             return ListTile(
               onTap: () => onTap(node),
               title: Text(node.id.name),
-              // shape: LinearBorder.bottom(
-              //   side: const BorderSide(
-              //     color: Colors.grey,
-              //     width: 1,
-              //   ),
-              // ),
+              leading: (node.fieldType == groupType)
+                  ? const Icon(Icons.folder)
+                  : const Icon(Icons.list_alt),
             );
           }, childCount: playlists.length),
         ),

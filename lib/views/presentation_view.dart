@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import 'package:flutter/material.dart';
 import 'package:presenterremote/services/presentation_service.dart';
 
@@ -12,6 +14,12 @@ class _PresentationViewState extends State<PresentationView> {
   late final PresentationService _presentationService;
   late final String presentationId;
   late Future<List<AppSlide>> futurePresentation;
+  late Future<Stream<Map<String, dynamic>>?> futureStatus;
+  late Future<Stream<Map<String, dynamic>>?> futureSlideIndex;
+  bool _isInitialized = false;
+  String? presId;
+  int? slideIndex;
+  bool slideLayer = false;
 
   @override
   void initState() {
@@ -21,12 +29,17 @@ class _PresentationViewState extends State<PresentationView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
-    _presentationService = args['presentService'] as PresentationService;
-    presentationId = args['itemId'] as String;
-    futurePresentation = _presentationService.getPresentation(presentationId);
+    if (!_isInitialized) {
+      final args =
+          ModalRoute.of(context)!.settings.arguments as Map<String, Object>;
+      _presentationService = args['presentService'] as PresentationService;
+      presentationId = args['itemId'] as String;
+      futurePresentation = _presentationService.getPresentation(presentationId);
+      futureStatus = _presentationService
+          .getStatusUpdates(['presentation/slide_index', 'status/layers']);
+      futureSlideIndex = _presentationService.getSlideIndexStream();
+      _isInitialized = true;
+    }
   }
 
   @override
@@ -66,23 +79,80 @@ class _PresentationViewState extends State<PresentationView> {
                 )
               ],
             ),
-            body: Center(
-              child: GridView.count(
-                padding: const EdgeInsets.all(10),
-                crossAxisCount: 2,
-                childAspectRatio: 1.78,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                children: snapshot.data!.map<Widget>((slide) {
-                  return _GridSlideItem(
-                    slide: slide,
-                    presentationService: _presentationService,
-                    presentationId: presentationId,
+            body: FutureBuilder<Stream<Map<String, dynamic>>?>(
+              future: futureSlideIndex, //futureStatus,
+              builder: (context, streamSnapshot) {
+                if (streamSnapshot.hasData) {
+                  return StreamBuilder<Map<String, dynamic>>(
+                    stream: streamSnapshot.data,
+                    builder: (context, slideIndexSnapshot) {
+                      if (slideIndexSnapshot.hasData) {
+                        dev.log(
+                            'slideIndexSnapshot: ${slideIndexSnapshot.data}',
+                            name: 'PresentationView');
+                        // if (slideIndexSnapshot.data!['url'] ==
+                        //     'presentation/slide_index') {
+                        // if (slideIndexSnapshot.data!['presentation_index'] !=
+                        //     null) {
+                        presId = slideIndexSnapshot.data!['presentation_index']
+                            ?['presentation_id']?['uuid'];
+                        slideIndex = slideIndexSnapshot
+                            .data!['presentation_index']?['index'];
+                        // }
+                        dev.log('slideIndex: $slideIndex | presId: $presId',
+                            name: 'PresentationView');
+                        // }
+                        // if (statusSnapshot.data!['url'] == 'status/layers') {
+                        //   slideLayer =
+                        //       statusSnapshot.data!['data']['slide'] as bool;
+                        //   dev.log('slideLayer: $slideLayer',
+                        //       name: 'PresentationView');
+                        // }
+                      }
+                      return Center(
+                        child: GridView.count(
+                          padding: const EdgeInsets.all(10),
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.78,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          children: snapshot.data!.map<Widget>((slide) {
+                            return Material(
+                              shape: RoundedRectangleBorder(
+                                  side: presId == presentationId &&
+                                          slideIndex == slide.index
+                                      ? const BorderSide(
+                                          color: Colors.orange,
+                                          width: 6.0,
+                                        )
+                                      : BorderSide(
+                                          color: slide.groupColor.toColor(),
+                                          width: 1.0,
+                                        ),
+                                  borderRadius: BorderRadius.circular(1)),
+                              clipBehavior: Clip.antiAlias,
+                              child: _GridSlideItem(
+                                slide: slide,
+                                presentationService: _presentationService,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
                   );
-                }).toList(),
-              ),
+                }
+                if (streamSnapshot.hasError) {
+                  dev.log('Error loading slide index: ${streamSnapshot.error}',
+                      name: 'PresentationView', error: streamSnapshot.error);
+                  return const Text(
+                    'Error loading slide index',
+                    style: TextStyle(color: Colors.red),
+                  );
+                }
+                return const RefreshProgressIndicator();
+              },
             ),
-            backgroundColor: Colors.black,
           );
         } else if (snapshot.hasError) {
           return Scaffold(
@@ -113,52 +183,20 @@ class _PresentationViewState extends State<PresentationView> {
 
 class _GridSlideItem extends StatelessWidget {
   const _GridSlideItem(
-      {required this.slide,
-      required this.presentationService,
-      required this.presentationId});
+      {required this.slide, required this.presentationService});
 
   final AppSlide slide;
   final PresentationService presentationService;
-  final String presentationId;
 
   @override
   Widget build(BuildContext context) {
     final Widget image = Semantics(
       label: slide.label,
       enabled: slide.enabled,
-      child: FutureBuilder<Stream<Map<String, dynamic>>?>(
-        future: presentationService.getSlideIndexStream(),
-        builder: (context, streamSnapshot) {
-          if (streamSnapshot.hasData) {
-            return StreamBuilder<Map<String, dynamic>>(
-              stream: streamSnapshot.data,
-              builder: (context, snapshot) {
-                return Material(
-                  shape: RoundedRectangleBorder(
-                      side: BorderSide(
-                        color: snapshot.hasData &&
-                                snapshot.data!['presentation_index'] != null &&
-                                snapshot.data!['presentation_index']
-                                        ['presentation_id']['uuid'] ==
-                                    presentationId &&
-                                snapshot.data!['presentation_index']['index'] ==
-                                    slide.index
-                            ? Colors.orange
-                            : Colors.black,
-                        width: 6.0,
-                      ),
-                      borderRadius: BorderRadius.circular(1)),
-                  clipBehavior: Clip.antiAlias,
-                  child: presentationService.getSlideThumbnail(slide.index),
-                );
-              },
-            );
-          }
-          if (streamSnapshot.hasError) {
-            return const Text('Error loading slide index');
-          }
-          return const CircularProgressIndicator();
-        },
+      child: Material(
+        shape: const RoundedRectangleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: presentationService.getSlideThumbnail(slide.index),
       ),
     );
 
