@@ -40,6 +40,7 @@ dependencies:
   json_annotation: ^4.9.0
   shared_preferences: ^2.2.1
   propresenter_api: ^0.3.0
+  network_info_plus: ^6.0.0
 
 dev_dependencies:
   flutter_test:

@@ -14,8 +14,6 @@ class PresentationService {
   String _uuid = '';
   String _presentationName = '';
   final String _baseUrl;
-  // var api = ProApiClient(
-  //     ProSettings(version: ProVersion.seven9, host: 'localhost', port: 60157));
 
   PresentationService(this._baseUrl);
 
